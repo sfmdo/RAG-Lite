@@ -1,0 +1,21 @@
+# Main Title: RAG System Testing Document
+This is a test paragraph designed to verify UTF-8 encoding. It must correctly display Spanish characters like: "Atención", "Mañana", and "Pingüino". 
+
+Even though the main content is in English, the loader must not corrupt these symbols: á, é, í, ó, ú, ñ, ¿, ¡.
+
+## Section 1: Formatting and Lists
+The following list items contain mixed language formatting:
+* Critical Element A: Verifying the **bold** consistency.
+* Critical Element B: Testing the *italic* and `inline_code` blocks.
+* Acción Requerida: Ensure the LLM identifies this bullet point properly.
+
+## Section 2: Tabular Data (Critical for RAG)
+The parser should maintain the alignment of this table so the LLM can associate the ID with the Value.
+
+| ID | Category   | Value (Metric) | Status    |
+|----|------------|----------------|-----------|
+| 01 | Sensor_Á   | 98.5%          | Active    |
+| 02 | Sensor_Ñ   | 12.0 m/s       | Warning   |
+| 03 | Sensor_Í   | -5.2 °C        | Critical  |
+
+> Verification Note: This blockquote is a "context hint". The LLM should treat this as metadata or a specific instruction separate from the main body.

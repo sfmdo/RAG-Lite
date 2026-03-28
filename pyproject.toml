@@ -1,0 +1,12 @@
+[project]
+name = "rag-lite"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "odfpy>=1.4.1",
+    "pypdf2>=3.0.1",
+    "python-docx>=1.2.0",
+    "python-frontmatter>=1.1.0",
+]
