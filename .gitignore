@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+.env
+
+# Model resources and tokenizers
+resources/tokenizer/*
+!resources/tokenizer/.gitkeep
+
+# Logs
+log.txt
+*.log
+
+#ChromaDB
+data/vector_db/chroma.sqlite3

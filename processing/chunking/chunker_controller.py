@@ -5,7 +5,7 @@ from processing.chunking.separators import SeparatorProvider
 from typing import Any, List
 
 class ChunkerController:
-    def __init__(self, tokenizer_name: str = "e5-small-v2"):
+    def __init__(self, tokenizer_name: str = "e5-small"):
         self.chunker = HuggingFaceTokenRecursiveChunker(tokenizer_name=tokenizer_name)
 
     def process(self, content: Any, extension: str = ".txt") -> List[str]:
@@ -32,5 +32,5 @@ class ChunkerController:
         # Decision Logic: Get the right separators for this specific extension
         rules = SeparatorProvider.get_separators(current_ext)
 
-        # 4. Execution: Pass the text AND the rules to the engine
+        # Execution: Pass the text AND the rules to the engine
         return self.chunker.split_text(text, separators=rules)

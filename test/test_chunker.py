@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import sys
 import logging
 from pathlib import Path
+
 
 root_path = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_path))
@@ -18,10 +21,14 @@ def run_unified_test():
 
     # Initialize Controller
     try:
-        controller = ChunkerController(tokenizer_name="e5-small-v2")
-        print("✅ Chunker Controller initialized successfully.")
+        tokenizer = os.getenv("TOKENIZER_NAME")
+        if tokenizer is None:
+            raise ValueError("ERROR: La variable de entorno 'MODEL_NAME' no está definida. "
+                    "Asegúrate de configurar tu archivo .env con la ruta al modelo.") 
+        controller = ChunkerController(tokenizer_name=tokenizer)
+        print("Chunker Controller initialized successfully.")
     except Exception as e:
-        print(f"❌ Initialization failed: {e}")
+        print(f"Initialization failed: {e}")
         return
 
     # Define Test Cases

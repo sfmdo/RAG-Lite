@@ -20,9 +20,9 @@ class SeparatorProvider:
     # Mapeo de extensiones a estrategias
     _EXTENSION_TO_STRATEGY: Dict[str, str] = {
         "md": "markdown",
-        #"py": "code", Future implementation
-        #"js": "code",
-        #"cpp": "code",
+        "py": "code", # ! Future implementation
+        "js": "code",
+        "cpp": "code",
         "pdf": "document",  
         "docx": "document", 
         "odt": "document",

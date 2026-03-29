@@ -1,5 +1,4 @@
 from processing.chunking.text_splitter import TextSplitter
-from processing.text_cleaner import normalize_text
 from typing import Any, List
 from pathlib import Path
 from enum import Enum
@@ -12,12 +11,12 @@ class ChunkingStrategy(Enum):
 class HuggingFaceTokenRecursiveChunker(TextSplitter):
     """
     Implementation of a TextSplitter that uses a local HuggingFace tokenizer.
-    Ideal for models like e5-small-v2 running in local environments.
+    Ideal for models like e5-small running in local environments.
     """
 
     def __init__(
         self,
-        tokenizer_name: str = "e5-small-v2",
+        tokenizer_name: str = "e5-small",
         chunk_size: int = 200,
         chunk_overlap: int = 50,
         **kwargs: Any,
@@ -45,10 +44,6 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
         
         tokenizer_path_str = str(tokenizer_path.resolve())
 
-        # --- DEPURACIÓN VISUAL ---
-        # Si ves este print al fallar, sabrás qué ruta intentó cargar
-        print(f"DEBUG: Attempting to load tokenizer from: {tokenizer_path_str}")
-
         if not tokenizer_path.exists():
             raise ValueError(
                 f"Tokenizer folder '{tokenizer_name}' not found at: {tokenizer_path_str}. "
@@ -64,7 +59,7 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
             )
         except Exception as e:
             raise ValueError(
-                f"Could not load tokenizer : {tokenizer_name}. "
+                f"Could not load model : {tokenizer_name}. "
                 f"Error: {str(e)}"
             )
 

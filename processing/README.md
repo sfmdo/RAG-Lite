@@ -2,6 +2,8 @@
 
 This module is responsible for transforming raw extracted text or structured chat history into high-quality, semantically coherent fragments (chunks) optimized for the **e5-small-v2** embedding model.
 
+Since model resources are excluded from this repository to keep it lightweight, you must download the tokenizer locally before running the system.
+
 ## 1. Offline Tokenizer Setup
 
 To ensure precise token counting without internet dependency, we use a local instance of the HuggingFace tokenizer. This allows the system to measure chunks exactly as the embedding model sees them.
