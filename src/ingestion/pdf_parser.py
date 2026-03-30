@@ -17,5 +17,5 @@ def load_pdf(path: str) -> str:
 
         return text.strip()
     except Exception as e:
-        print(f"Error procesando PDF: {e}")
+        print(f"Error processing PDF: {e}")
         return ""

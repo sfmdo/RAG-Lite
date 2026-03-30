@@ -11,7 +11,7 @@ def load_md(path: str) -> str:
         
         header = ""
         if post.metadata:
-            header = "METADATOS DEL DOCUMENTO:\n"
+            header = "METADATA\n"
             for key, value in post.metadata.items():
                 header += f"- {key}: {value}\n"
             header += "---\n\n"
