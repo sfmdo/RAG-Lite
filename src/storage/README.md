@@ -5,6 +5,9 @@ The **Storage** module is the central memory engine of the RAG-Lite system. It i
 
 ---
 
+### Key Constants
+*   **`GLOBAL_USER_ID = "global_public"`:** A reserved static identifier used to store system-wide knowledge (MCP tools, manuals, behavior rules) accessible to all users.
+
 ## 1. Local Embedder (`src/storage/embedder.py`)
 
 **Purpose:**  

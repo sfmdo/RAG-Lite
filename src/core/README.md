@@ -1,35 +1,55 @@
 # Module 5: Orchestrator Engine
 
 ## Overview
-The **Orchestrator** module acts as the central, user-facing entry point for the entire RAG-Lite system. It completely abstracts the underlying complexity of document parsing, text chunking, database connections, and context formatting into a simple "plug-and-play" interface. It is designed to be directly imported and used by the final application layer (like a FastAPI backend or a Telegram bot).
+The **Orchestrator** module acts as the central, user-facing entry point for the entire RAG-Lite system. It abstracts the underlying complexity of document parsing, text chunking, database connections, and context formatting into a "plug-and-play" interface. It is designed for direct integration with application layers such as FastAPI backends or Telegram bots.
 
 ---
 
 ## 1. RAG Orchestrator (`src/orchestrator/rag_orchestrator.py`)
 
-**Purpose:** To manage the complete end-to-end lifecycles of both Data Ingestion and Context Retrieval. It acts as the ultimate Facade, internally coordinating the `DocumentLoader`, `ChunkerController`, `StorageManager`, and `Retriever` so the end user only has to call two simple functions.
+**Purpose:**  
+To manage the complete end-to-end lifecycles of Data Ingestion and Context Retrieval. It acts as a **Facade**, coordinating the `DocumentLoader`, `ChunkerController`, `StorageManager`, and `Retriever`.
 
-### Initialization Variables
-* **Self-Contained Setup:** The class requires *no arguments* upon instantiation. 
-* **Internal Instantiation:** It automatically creates its own instances of `StorageManager` and `Retriever`.
-* **Environment Dependency:** It requires the `TOKENIZER_NAME` environment variable (e.g., loaded via `.env`) to successfully initialize the internal `ChunkerController`.
+### Initialization
+*   **Self-Contained Setup:** The class requires no arguments upon instantiation.
+*   **Internal Instantiation:** It automatically manages instances of `StorageManager` and `Retriever`.
+*   **Environment Dependency:** Requires `TOKENIZER_NAME` (loaded via `.env`) to initialize the `ChunkerController`.
 
-### Methods
-* **`_ensure_initialized(self)`** *(Async / Internal)*
-    * **Action:** Implements the **Lazy Initialization** pattern. It checks if the underlying database connection is active; if not, it initializes it. This ensures the heavy database startup only happens once, right before the very first operation, saving memory and preventing connection errors.
+### Ingestion Methods
+*   **`ingest_global_document(self, path: str) -> Dict[str, Any]` (Async)**
+    *   **Action:** Ingests documentation intended for the entire system.
+    *   **Use Case:** Loading MCP tool guides, system prompts, or general knowledge that every user should be able to query.
+    *   **Logic:** Internally calls `ingest_file` using the `GLOBAL_USER_ID`.
 
-* **`ingest_file(self, path: str, user_id: str) -> Dict[str, Any]`** *(Async)*
-    * **Action:** The complete flow for adding a new document to the knowledge base.
-    * **Processing:**
-        1. Triggers `_ensure_initialized()`.
-        2. Extracts the file extension and reads the raw text using the ingestion utilities.
-        3. Passes the text to the `ChunkerController` to be split into semantically optimized chunks based on the file type.
-        4. Extracts the file name and forwards the chunks to the `StorageManager` to be vectorized and saved under the specified `user_id`.
-    * **Returns:** A status dictionary containing the success state, the number of chunks inserted, and the source file name.
+*   **`ingest_user_document(self, path: str, user_id: str) -> Dict[str, Any]` (Async)**
+    *   **Action:** Ingests private files belonging to a specific user.
+    *   **Use Case:** Processing a PDF or text file uploaded by a specific Telegram user.
+    *   **Logic:** Internally calls `ingest_file` using the provided `user_id` to ensure data isolation.
 
-* **`search_context(self, query: str, user_id: str) -> str`** *(Async)*
-    * **Action:** The complete flow for answering a user's question.
-    * **Processing:** 1. Triggers `_ensure_initialized()`.
-        2. Forwards the query directly to the internal `Retriever`.
-    * **Security:** Passes the `user_id` down the chain to guarantee the search is strictly isolated to the user's own documents and chat history.
-    * **Returns:** A cohesive, Markdown-formatted string containing both relevant document facts and past chat memory, ready to be injected as a hidden system prompt for the LLM.
+*   **`ingest_file(self, path: str, user_id: str) -> Dict[str, Any]` (Async / Internal)**
+    *   **Action:** The core processing flow: triggers lazy initialization, extracts raw text, generates semantically optimized chunks via `ChunkerController`, and forwards them to `StorageManager` for vectorization.
+
+### Retrieval Methods
+*   **`search_context(self, query: str, user_id: str) -> str` (Async)**
+    *   **Action:** The primary method for generating an LLM prompt context.
+    *   **Hybrid Logic:** 
+        1.  **Knowledge Retrieval:** Automatically performs a search across both the specific `user_id` and the `GLOBAL_USER_ID`. This ensures the LLM has access to both private files and system-wide tools.
+        2.  **Memory Retrieval:** Searches the conversation history associated strictly with the `user_id`.
+    *   **Security:** While knowledge retrieval is hybrid, chat history remains strictly isolated to the individual user to prevent privacy leaks.
+    *   **Returns:** A cohesive, Markdown-formatted string containing relevant document facts and past chat memory.
+
+---
+
+## 2. Internal Logic Flows
+
+### `_ensure_initialized(self)` (Async / Internal)
+Implements the **Lazy Initialization** pattern. It verifies the database connection is active before any operation. This ensures heavy resource allocation (like loading embedding models into memory) only occurs upon the first actual request.
+
+### Hybrid Metadata Filtering
+The Orchestrator instructs the underlying Retriever to use a logical `$or` filter during the vector search:
+
+```python
+where={"$or": [{"user_id": user_id}, {"user_id": "global_public"}]}
+```
+
+This allows the system to scale efficiently, serving shared documentation (like MCP manuals) to thousands of users without duplicating data in the database, while still respecting the privacy of individual user documents.

@@ -1,8 +1,9 @@
 import uuid
 from typing import List, Dict, Any
-
 from utils.logger import get_logger
 logger = get_logger(__name__)
+
+GLOBAL_USER_ID = "global_public"
 
 class DocumentStore:
     def __init__(self, manager):
@@ -34,7 +35,12 @@ class DocumentStore:
         results = await self.collection.query(
             query_embeddings=query_vector,
             n_results=top_k,
-            where={"user_id": user_id}
+            where={
+            "$or": [
+                {"user_id": str(user_id)},       # Private context
+                {"user_id": GLOBAL_USER_ID}      # Global/System context
+                ]
+            }
         )
 
         return self._format_results(results)

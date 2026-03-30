@@ -1,11 +1,12 @@
 import os
 from typing import Dict, Any
 
-# Assuming these are your actual import paths
 from src.ingestion.document_loader import serveDocument, extractExtension
 from processing.chunking.chunker_controller import ChunkerController
 from src.storage.storage_manager import StorageManager
 from src.retriever.retriever import Retriever
+
+from src.storage.vector_store import GLOBAL_USER_ID
 
 class RAGOrchestrator:
     def __init__(self):
@@ -46,6 +47,20 @@ class RAGOrchestrator:
         
         return {"status": "success", "chunks_inserted": len(chunks), "source": source_name}
 
+    async def ingest_global_document(self, path: str):
+        """
+        Ingests manuals, MCP tool documentation, or behavior rules 
+        that will be available to ALL users as base knowledge.
+        """
+        return await self.ingest_file(path=path, user_id=GLOBAL_USER_ID)
+
+    async def ingest_user_document(self, path: str, user_id: str):
+        """
+        Ingests private files belonging to a specific user (e.g., from Telegram).
+        Ensures data isolation by mapping chunks to the specific user_id.
+        """
+        return await self.ingest_file(path=path, user_id=str(user_id))
+    
     async def search_context(self, query: str, user_id: str) -> str:
         """
         Complete flow: Takes a query and returns a single merged context string.

@@ -1,0 +1,1 @@
+This is the global MCP manual. It contains instructions on how to use system tools like search and memory.
