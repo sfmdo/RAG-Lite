@@ -11,7 +11,7 @@ The **Storage** module is the central memory engine of the RAG-Lite system. It i
 A custom wrapper for **FastEmbed** that handles text vectorization. It acts as a black box, automatically applying the strict prefixing rules required by the `intfloat/multilingual-e5-small` model.
 
 ### Initialization Variables
-*   **`model_name` (str):** The HuggingFace model identifier. Defaults to `"intfloat/multilingual-e5-small"`.
+*   **`model_name` (str):** The HuggingFace model identifier. Defaults to `"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"`.
 *   **`cache_dir` (str):** Local path to store downloaded model weights. Defaults to `"./data/models"`.
 
 ### Methods
@@ -46,7 +46,7 @@ The central database client. It establishes the asynchronous connection to Chrom
 Manages the long-term factual knowledge base. It stores the chunked text from your ingested files (PDFs, DOCXs, TXTs).
 
 ### Initialization Variables
-*   **`manager`:** Takes an active instance of the `AsyncChromaManager`. Connects specifically to the `"documents"` collection.
+*   **`manager`:** Takes an active instance of the `AsyncChromaManager`. Connects specifically to the `"documents"` collection, collectiosn are (`context`,`documents` and `code`).
 
 ### Methods
 *   **`add_chunks(self, chunks: List[str], source_name: str, custom_ids: List[str] = None)`**
@@ -69,14 +69,30 @@ Manages conversational memory. It is specifically designed for multi-tenant envi
 ### Methods
 *   **`add_message(self, session_id: str, role: str, content: str, custom_id: str = None)`**
     *   **Action:** Saves a single message to the database.
-    *   **Metadata applied:** `{"session_id": session_id, "role": role, "type": "chat_message"}`. *(Note: The session_id must be the user's Telegram ID)*.
-    *   **ID Logic:** Generates a random UUID as the primary key unless `custom_id` is provided. This ensures a user can have infinite messages without overwriting their own history.
+    *   **Metadata applied:** `{"user_id": user_id, "role": role, "type": "chat_message"}`.
+    *   **ID Logic:** Generates a random UUID as the primary key. This ensures a user can have infinite messages without overwriting their own history.
 *   **`get_relevant_history(self, session_id: str, current_query: str, top_k: int = 5) -> List[Dict]`**
     *   **Action:** Performs a similarity search for past messages that are relevant to the user's current question.
-    *   **Security/Filtering:** Uses a ChromaDB `where` clause (`{"session_id": str(session_id)}`) to guarantee that the LLM only retrieves memories belonging to the specific Telegram user making the request.
+    *   **Security/Filtering:** Uses a ChromaDB `where` clause (`{"user_id": user_id}`) to guarantee that the LLM only retrieves memories belonging to the specific Telegram user making the request.
 
 ---
+## 5. Storage Manager (`src/storage/storage_manager.py`)
 
+**Purpose:** Acts as the main orchestrator (Facade) for all storage and retrieval operations. It dynamically routes text chunks and queries to the correct collection (`documents`, `context`, or `code`) depending on the file extension or the required storage type.
+
+### Initialization Variables
+* **`manager`:** Instance of `AsyncChromaManager` that handles the connection to the underlying database.
+* **`storage_actions` (dict):** A dictionary mapping storage types (e.g., `"document"`, `"context"`, `"code"`) to their respective insertion functions.
+
+### Methods
+* **`initialize(self)`** *(Async)*
+    * **Action:** Initializes the underlying `AsyncChromaManager` and configures the routing (`storage_actions`) to know which collection to send each data type to.
+* **`insert(self, chunks: List[str], source_name: str, user_id: str, extension: str)`** *(Async)*
+    * **Action:** Receives a list of text chunks and, based on the `extension` (e.g., `"pdf"`, `"context"`), determines the correct collection to save them in. 
+    * **Note:** Internally uses *keyword arguments* (`user_id=user_id`, `source_name=source_name`) to prevent metadata mix-ups in the database.
+* **`retrieve(self, query: str, user_id: str, storage_type: str, top_k: int = 1) -> List[Dict]`** *(Async)*
+    * **Action:** Searches the collection specified by `storage_type` for the chunks most similar to the `query`.
+    * **Security:** Applies a strict filter by `user_id` to ensure the user only retrieves their own information or history.
 ## Dependencies & Environment Variables
 
 To operate this module, the following environment variables are utilized via the `utils.logger` utility and database connection configs:

@@ -4,19 +4,19 @@ from src.ingestion.txt_parser import load_txt
 from src.ingestion.docs_loader import load_docx, load_odt
 
 loaders = {
-    ".md": load_md,
-    ".pdf": load_pdf,
-    ".txt": load_txt,
-    ".docx": load_docx,
-    ".odt": load_odt,
+    "md": load_md,
+    "pdf": load_pdf,
+    "txt": load_txt,
+    "docx": load_docx,
+    "odt": load_odt,
 }
 
 def extractExtension(path: str) -> str:
     extension=""
     for i in range(len(path)-1, -1, -1):
         if path[i] == '.':
-            extension = path[i:]
-            break
+            extension = path[i+1:]
+            return extension
     if extension == "" or extension == None:
         return ""
     return extension

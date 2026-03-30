@@ -2,6 +2,7 @@ import os
 import chromadb
 from dotenv import load_dotenv
 from src.storage.embedder import LocalEmbedder
+from chromadb.config import Settings
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ class AsyncChromaManager:
         Establishes the HTTP connection and ensures collections exist.
         Must be called with 'await' when starting the app.
         """
-        self.client = await chromadb.AsyncHttpClient(host=self.host, port=self.port)
+        self.client = await chromadb.AsyncHttpClient(host=self.host, port=self.port,settings=Settings(allow_reset=True))
         
         collection_names = ["context", "documents", "code"]
         
@@ -36,3 +37,4 @@ class AsyncChromaManager:
         if name not in self.collections:
             raise ValueError(f"The collection '{name}' does not exist.")
         return self.collections[name]
+    

@@ -11,14 +11,14 @@ class DocumentStore:
 
         self.embedder = manager.embedder
 
-    async def add_chunks(self, chunks: List[str], source_name: str) -> bool:
+    async def add_chunks(self, chunks: List[str], user_id: str,source_name: str = "document") -> None:
         """Asynchronously adds document chunks to the database."""
         if not chunks:
             logger.debug("No chunks to insert")
-            return False
+            return
 
         ids = [str(uuid.uuid4()) for _ in chunks]
-        metadatas = [{"source": source_name, "type": "document"} for _ in chunks]
+        metadatas = [{"source": source_name, "type": "document", "user_id": user_id} for _ in chunks]
 
         await self.collection.add(
             documents=chunks,
@@ -26,15 +26,15 @@ class DocumentStore:
             ids=ids
         )
         logger.debug(f"Inserted {len(chunks)} chunks from '{source_name}' into DocumentStore.")
-        return True
 
-    async def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+    async def search(self, query: str,user_id: str, top_k: int = 4) -> List[Dict[str, Any]]:
         """Searches for the most relevant document chunks based on the user query."""
         query_vector = self.embedder.embed_query(query)
 
         results = await self.collection.query(
-            query_embeddings=[query_vector],
-            n_results=top_k
+            query_embeddings=query_vector,
+            n_results=top_k,
+            where={"user_id": user_id}
         )
 
         return self._format_results(results)
@@ -59,31 +59,31 @@ class ContextStore:
         self.collection = manager.get_collection("context")
         self.embedder = manager.embedder
 
-    async def add_message(self, session_id: str, role: str, content: str, custom_id: str = "") -> None:
+    async def add_messages(self, chunks: List[str], user_id: str, source_name: str = "conversation") -> None:
         """
         Saves a single chat message. 
-        session_id -> This is where your TELEGRAM ID goes.
+        user_id -> the id of the converstaion or user than belongs the information.
         custom_id -> Override for the Chroma record ID (Defaults to UUID).
         """
-        message_id = custom_id if custom_id else str(uuid.uuid4())
+        ids = [str(uuid.uuid4()) for _ in chunks]
         
-        metadata = {"session_id": str(session_id), "role": role, "type": "chat_message"}
+        metadata = [{"user_id": str(user_id), "type": "chat_message", "source": source_name} for _ in chunks]
 
         await self.collection.add(
-            documents=[content],
-            metadatas=[metadata],
-            ids=[message_id]
+            documents=chunks,
+            metadatas=metadata,
+            ids=ids
         )
-        logger.debug(f"Added {role} message. Chroma ID: {message_id} | Telegram User: {session_id}")
+        logger.debug(f"Added {len(chunks)} messages. User_Id: {user_id}")
 
-    async def get_relevant_history(self, session_id: str, current_query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    async def get_relevant_history(self, query: str, user_id: str, top_k: int = 4) -> List[Dict[str, Any]]:
         """Finds past messages in the current session relevant to the new query."""
-        query_vector = self.embedder.embed_query(current_query)
+        query_vector = self.embedder.embed_query(query)
 
         results = await self.collection.query(
-            query_embeddings=[query_vector],
+            query_embeddings=query_vector,
             n_results=top_k,
-            where={"session_id": session_id}
+            where={"user_id": user_id}
         )
         
         formatted = []

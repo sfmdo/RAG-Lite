@@ -1,10 +1,10 @@
 import os
-from typing import List, Sequence
+from typing import List, Sequence, cast, Dict, Any
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from fastembed import TextEmbedding
 
 class LocalEmbedder(EmbeddingFunction):
-    def __init__(self, model_name: str = "intfloat/multilingual-e5-small", cache_dir: str = "./data/models"):
+    def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", cache_dir: str = "./data/models"):
         """
         Initializes the FastEmbed model.
         Downloads the model to cache_dir on the first run, then loads it locally.
@@ -20,31 +20,27 @@ class LocalEmbedder(EmbeddingFunction):
     def __call__(self, input: Documents) -> Embeddings:
         """
         Function automatically called by ChromaDB when executing collection.add().
-        Receives clean text chunks and returns lists of vectors.
+        Receives clean text chunks and returns embeddings.
         """
-        # E5 RULE: Saved documents must include the 'passage: ' prefix
-        processed_texts = [f"passage: {text}" for text in input]
+        raw_vectors = self.model.embed(input)
         
-        # FastEmbed's embed() returns a generator of numpy arrays.
-        embeddings_generator = self.model.embed(processed_texts)
+        final_result = [vector.flatten().tolist() for vector in raw_vectors]
         
-        # ChromaDB expects a list of lists of floats, so we convert the generator
-        embeddings = [embedding.tolist() for embedding in embeddings_generator]
+        return final_result # type:ignore
         
-        return embeddings
 
-    def embed_query(self, input: str) -> Embeddings:
-        """
-        Helper function for the Retriever.
-        Use this when the user makes a query.
-        """
-        # E5 RULE: Queries must include the 'query: ' prefix
-        generator = self.model.embed([f"query: {input}"])
-    
+    def embed_query(self, input: str):
+        if isinstance(input, list):
+            input = input[0]
+            
+        generator = self.model.embed([input])
         embedding = list(generator)[0].tolist()
-    
-        return embedding
+        
+        return [embedding]
 
     @staticmethod
     def name() -> str:
         return "LocalEmbedder"
+    
+    def get_config(self) -> Dict[str, Any]:
+        return dict(model=self.model)
