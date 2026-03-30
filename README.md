@@ -122,4 +122,4 @@ For detailed technical specifications, architecture patterns, and internal workf
 *   [Processing and Chunking Module](./processing/README.md)
 *   [Storage Module](./src/storage/README.md)
 *   [Retriever Module](./src/retriever/README.md)
-*   [Orchestrator Module](./src/core/orchestrator/README.md)
+*   [Orchestrator Module](./src/core/README.md)
