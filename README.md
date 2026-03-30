@@ -119,7 +119,7 @@ uv run pytest -v
 For detailed technical specifications, architecture patterns, and internal workflows, refer to the documentation provided within each module:
 
 *   [Ingestion Module](./src/ingestion/README.md)
-*   [Processing and Chunking Module](./src/processing/README.md)
+*   [Processing and Chunking Module](./processing/README.md)
 *   [Storage Module](./src/storage/README.md)
 *   [Retriever Module](./src/retriever/README.md)
 *   [Orchestrator Module](./src/orchestrator/README.md)
