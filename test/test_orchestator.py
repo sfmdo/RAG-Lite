@@ -10,11 +10,12 @@ async def orchestrator_system():
     await orch._ensure_initialized()
     test_user_id = "orch_test_999"
 
-    # --- SETUP CLEANUP ---
+    # --- SETUP CLEANUP (Catch-all for all test users) ---
+    test_users = [test_user_id, "user_A", "user_B", "global_public"]
     for name in ["documents", "context"]:
         try:
             col = orch.storage.manager.get_collection(name)
-            await col.delete(where={"user_id": test_user_id})
+            await col.delete(where={"user_id": {"$in": test_users}})
         except Exception:
             pass 
 
@@ -24,7 +25,7 @@ async def orchestrator_system():
     for name in ["documents", "context"]:
         try:
             col = orch.storage.manager.get_collection(name)
-            await col.delete(where={"user_id": test_user_id})
+            await col.delete(where={"user_id": {"$in": test_users}})
         except Exception:
             pass
 
@@ -32,13 +33,12 @@ async def orchestrator_system():
 async def test_orchestrator_end_to_end(orchestrator_system):
     orch, test_user_id = orchestrator_system
 
-
     current_dir = os.path.dirname(__file__)
     test_file_path = os.path.join(current_dir, "inputs", "text.txt")
 
     assert os.path.exists(test_file_path), f"Test file not found at {test_file_path}"
 
-    # 2. Test INGESTION
+    # 1. Test INGESTION
     ingest_result = await orch.ingest_file(path=test_file_path, user_id=test_user_id)
 
     # Validate the ingestion response dictionary
@@ -46,13 +46,52 @@ async def test_orchestrator_end_to_end(orchestrator_system):
     assert ingest_result["chunks_inserted"] > 0
     assert ingest_result["source"] == "text.txt"
 
-    # 3. Test RETRIEVAL
+    # 2. Test RETRIEVAL
     query = "What is the main topic of this document?"
     context = await orch.search_context(query=query, user_id=test_user_id)
+    
     # Validate that the Retriever successfully intercepted the Orchestrator's request
-    # and formatted the Markdown correctly based on the ingested file.
     assert "### RELEVANT KNOWLEDGE" in context
     assert "[text.txt]" in context  # The source name should appear in the formatting
 
+    # 3. Test Empty/Wrong User
     empty_context = await orch.search_context(query=query, user_id="wrong_user_000")
     assert "No specific background information found" in empty_context or empty_context.strip() == ""
+
+@pytest.mark.asyncio
+async def test_hybrid_retrieval_data_isolation(orchestrator_system):
+    """
+    Tests the Multi-Tenant retrieval logic, ensuring that users can access
+    global system documents while maintaining strict isolation of private files.
+    """
+    # Unpack the Orchestrator from the fixture
+    orch, _ = orchestrator_system
+    
+    # Safely resolve paths exactly like the first test
+    current_dir = os.path.dirname(__file__)
+    global_file = os.path.join(current_dir, "inputs", "mcp_manual.txt")
+    private_file = os.path.join(current_dir, "inputs", "user_a_notes.txt")
+    
+    # Ensure test files exist before running to prevent false negatives
+    assert os.path.exists(global_file), "Missing mock file: mcp_manual.txt"
+    assert os.path.exists(private_file), "Missing mock file: user_a_notes.txt"
+    
+    # 1. Ingest a global document (available to everyone)
+    await orch.ingest_global_document(path=global_file)
+    
+    # 2. Ingest a private document specifically for User A
+    await orch.ingest_user_document(path=private_file, user_id="user_A")
+    
+    # 3. Perform a search as User A
+    context_a = await orch.search_context(query="testing retrieval", user_id="user_A")
+    
+    # Verify User A's access
+    assert "mcp_manual" in context_a, "Error: User A failed to retrieve the global document."
+    assert "user_a_notes" in context_a, "Error: User A failed to retrieve their own private document."
+    
+    # 4. Perform a search as User B (a completely different user)
+    context_b = await orch.search_context(query="testing retrieval", user_id="user_B")
+    
+    # Verify User B's access and strict data isolation
+    assert "mcp_manual" in context_b, "Error: User B failed to retrieve the global document."
+    assert "user_a_notes" not in context_b, "CRITICAL: Privacy leak! User B accessed User A's private document."
