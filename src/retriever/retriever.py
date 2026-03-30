@@ -4,7 +4,7 @@ class Retriever:
     def __init__(self, storage_manager: StorageManager):
         self.storage = storage_manager
 
-    async def get_context_for_llm(self, query: str, user_id: int) -> str:
+    async def get_context_for_llm(self, query: str, user_id: str) -> str:
         import asyncio
         docs_task = self.storage.retrieve(query=query, user_id=user_id, storage_type="document")
         history_task = self.storage.retrieve(query=query, user_id=user_id,storage_type="context")

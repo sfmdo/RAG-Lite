@@ -58,7 +58,7 @@ class StorageManager:
 
         return await action(chunks=chunks,source_name=source_name,user_id=user_id)
 
-    async def retrieve(self, query: str, user_id: int,top_k: int = 3,storage_type: str = "document") -> List[Dict[str, Any]]:
+    async def retrieve(self, query: str, user_id: str,top_k: int = 3,storage_type: str = "document") -> List[Dict[str, Any]]:
         """
         Main search entry point. 
         Routes the query to the specific store based on storage_type.
