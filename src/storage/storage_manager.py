@@ -9,7 +9,8 @@ class StorageManager:
     _EXTENSION_TO_STORAGE_ACTION: Dict[str, str] = {
         "md": "document", "py": "code", "js": "code", "cpp": "code",
         "pdf": "document", "docx": "document", "odt": "document",
-        "txt": "document", "context": "context"
+        "txt": "document", "context": "context",
+        "document": "document"
     }
 
     def __init__(self):

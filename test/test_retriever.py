@@ -5,9 +5,7 @@ from src.retriever.retriever import Retriever
 @pytest.fixture
 async def rag_system():
     storage = StorageManager()
-    
-    await storage.manager.initialize()
-
+    await storage.initialize()
     retriever = Retriever(storage)
 
     test_user_id = "999999"
@@ -15,7 +13,7 @@ async def rag_system():
     for name in ["documents", "context"]:
         try:
             col = storage.manager.get_collection(name)
-            col.delete(where={"user_id": test_user_id})
+            await col.delete(where={"user_id": test_user_id})
         except Exception:
             pass 
 
@@ -38,7 +36,7 @@ async def rag_system():
     for name in ["documents", "context"]:
         try:
             col = storage.manager.get_collection(name)
-            col.delete(where={"user_id": test_user_id})
+            await col.delete(where={"user_id": test_user_id})
         except Exception:
             pass
 
@@ -49,14 +47,12 @@ async def rag_system():
 async def test_full_context_retrieval(rag_system):
     storage, retriever, test_user_id = rag_system
     query = "What does the user like and what language should they use?"
+    context = await retriever.get_context_for_llm(query, user_id=test_user_id)
 
-    context = await retriever.get_full_context(query, user_id=test_user_id)
-
-    # Validaciones: Formato Markdown y contenido exacto
-    assert "### 📚 RELEVANT KNOWLEDGE" in context
+    assert "### RELEVANT KNOWLEDGE" in context
     assert "Python is great for AI" in context
-    assert "### 💬 RELEVANT CHAT MEMORY" in context
-    assert "love tacos" in context
+    assert "### RELEVANT CHAT MEMORY" in context
+    assert "tacos" in context
     assert "[tech_doc.pdf]" in context
 
 
@@ -64,6 +60,6 @@ async def test_full_context_retrieval(rag_system):
 async def test_user_isolation(rag_system):
     storage, retriever, test_user_id = rag_system
     
-    context = await retriever.get_full_context("Python", user_id=111111)
+    context = await retriever.get_context_for_llm("Python", user_id="111111")
     
-    assert "No specific context found" in context or context.strip() == ""
+    assert "No specific background information found" in context or context.strip() == ""

@@ -26,9 +26,8 @@ def mock_manager():
     
     manager.get_collection.return_value = mock_collection
     
-    # Fake the LocalEmbedder
     mock_embedder = MagicMock()
-    mock_embedder.embed_query.return_value = [0.1, 0.2, 0.3] # Fake vector
+    mock_embedder.embed_query.return_value = [0.1, 0.2, 0.3] 
     manager.embedder = mock_embedder
     
     return manager
@@ -124,7 +123,7 @@ async def test_context_store_get_relevant_history(mock_manager):
     # Replaced session_id with user_id
     await context_store.get_relevant_history(
         user_id="telegram_user_123", 
-        current_query="How are you?"
+        query="How are you?"
     )
     
     mock_collection = mock_manager.get_collection("context")

@@ -1,6 +1,6 @@
 # Chunking & Text Processing Module
 
-This module is responsible for transforming raw extracted text or structured chat history into high-quality, semantically coherent fragments (chunks) optimized for the **e5-small-v2** embedding model.
+This module is responsible for transforming raw extracted text or structured chat history into high-quality, semantically coherent fragments (chunks) optimized for the **sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2** embedding model.
 
 Since model resources are excluded from this repository to keep it lightweight, you must download the tokenizer locally before running the system.
 
@@ -12,7 +12,7 @@ To ensure precise token counting without internet dependency, we use a local ins
 Run the following command from the project root to download only the lightweight tokenizer metadata (~1.5 MB). 
 
 ```bash
-uv run --with huggingface-hub python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='intfloat/e5-small-v2', local_dir='./resources/tokenizer/e5-small-v2', allow_patterns=['tokenizer*', 'vocab.txt', 'config.json'])"
+uv run --with huggingface-hub python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', local_dir='./resources/tokenizer/paraphrase-multilingual-MiniLM-L12-v2', allow_patterns=['tokenizer*', 'vocab.txt', 'config.json'])"
 ```
 
 ---
@@ -47,7 +47,7 @@ Centralizes the splitting rules based on content type:
 *   **CODE (.py, .js, .cpp):** Prioritizes structural blocks (`class`, `def`, `function`).
 
 ### B. Recursive Engine (`recursive_token_chunker.py`)
-A "blind" engine that receives text and a list of separators. It calculates lengths using the local e5 tokenizer and applies a **Recursive Window** approach:
+A "blind" engine that receives text and a list of separators. It calculates lengths using the local paraphrase-multilingual-MiniLM-L12-v2 tokenizer and applies a **Recursive Window** approach:
 *   **Chunk Size:** 200 Tokens.
 *   **Chunk Overlap:** 50 Tokens.
 
@@ -65,7 +65,7 @@ The `ChunkerController` automatically decides the best approach based on the inp
 from processing.chunking.chunker_controller import ChunkerController
 
 # 1. Initialize the Controller (Offline)
-controller = ChunkerController(tokenizer_name="e5-small-v2")
+controller = ChunkerController(tokenizer_name="paraphrase-multilingual-MiniLM-L12-v2")
 
 # 2. Process Chat History (List of dicts)
 # Automatically uses .context identity and DOCUMENT strategy
