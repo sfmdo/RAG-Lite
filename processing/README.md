@@ -1,4 +1,4 @@
-# Chunking & Text Processing Module
+# Module 2: Chunking & Text Processing Module
 
 This module is responsible for transforming raw extracted text or structured chat history into high-quality, semantically coherent fragments (chunks) optimized for the **sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2** embedding model.
 
