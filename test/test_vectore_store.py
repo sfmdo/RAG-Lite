@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from src.storage.vector_store import DocumentStore, ContextStore
+from src.storage.vector_store import DocumentStore, ContextStore, GLOBAL_USER_ID
+
 
 # --- FIXTURES ---
 @pytest.fixture
@@ -79,8 +80,15 @@ async def test_document_store_search(mock_manager):
     # CRITICAL TEST: Ensure the document search is locked to the specific user_id
     mock_collection = mock_manager.get_collection("documents")
     kwargs = mock_collection.query.call_args.kwargs
-    assert kwargs['where'] == {"user_id": "12345"}
-    
+
+    expected_where = {
+        "$or": [
+            {"user_id": "12345"},
+            {"user_id": GLOBAL_USER_ID}
+        ]
+    }
+
+    assert kwargs['where'] == expected_where
     # Check if the results were formatted correctly
     assert len(results) == 2
     assert results[0]["id"] == "id1"
