@@ -3,22 +3,15 @@ import os
 from typing import Dict, Any
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from fastembed import TextEmbedding
-
+from pathlib import Path
 class LocalEmbedder(EmbeddingFunction):
-    def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", cache_dir: str = "./data/models"):
-        """
-        Initializes the FastEmbed model.
-        Downloads the model to cache_dir on the first run, then loads it locally.
-        """
+    def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", cache_dir: str = None):
         self.model_name = model_name
+        
         if cache_dir is None:
-            current_file_path = os.path.abspath(__file__) 
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))))
-            self.cache_dir = os.path.join(project_root, "data", "models")
+            self.cache_dir = None 
         else:
-            self.cache_dir = cache_dir
-
-        os.makedirs(self.cache_dir, exist_ok=True)
+            self.cache_dir = str(Path(cache_dir).resolve())
 
         self.model = TextEmbedding(
             model_name=self.model_name,

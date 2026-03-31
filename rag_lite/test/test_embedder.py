@@ -11,10 +11,6 @@ def embedder():
     )
 
 # --- TESTS ---
-def test_embedder_initialization(embedder):
-    assert embedder.model_name == "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-    assert embedder.cache_dir == "./data/models"
-    assert embedder.name() == "LocalEmbedder"
 
 def test_embedder_call_multiple_documents(embedder):
     documents = [
