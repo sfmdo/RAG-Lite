@@ -1,7 +1,7 @@
-from processing.context_handler import ContextHandler
-from processing.chunking.recursive_token_chunker import HuggingFaceTokenRecursiveChunker
-from processing.text_cleaner import normalize_text
-from processing.chunking.separators import SeparatorProvider
+from rag_lite.processing.context_handler import ContextHandler
+from rag_lite.processing.chunking.recursive_token_chunker import HuggingFaceTokenRecursiveChunker
+from rag_lite.processing.text_cleaner import normalize_text
+from rag_lite.processing.chunking.separators import SeparatorProvider
 from typing import Any, List
 
 class ChunkerController:

@@ -11,15 +11,17 @@ wheels/
 .env
 
 # Model resources and tokenizers
-resources/tokenizer/*
-!resources/tokenizer/.gitkeep
+rag_lite/resources/tokenizer/*
+!rag_lite/resources/tokenizer/.gitkeep
 
 # Logs
 log.txt
 *.log
 
 #ChromaDB
-data/vector_db/*
+rag_lite/data/vector_db/*
 
 #Embedder cache
-data/models/*
+rag_lite/data/models/*
+data/*
+rag_lite/test/data/*

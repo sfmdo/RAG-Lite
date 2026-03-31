@@ -1,7 +1,7 @@
-from src.ingestion.pdf_parser import load_pdf
-from src.ingestion.markdown_parser import load_md
-from src.ingestion.txt_parser import load_txt
-from src.ingestion.docs_loader import load_docx, load_odt
+from rag_lite.src.ingestion.pdf_parser import load_pdf
+from rag_lite.src.ingestion.markdown_parser import load_md
+from rag_lite.src.ingestion.txt_parser import load_txt
+from rag_lite.src.ingestion.docs_loader import load_docx, load_odt
 
 loaders = {
     "md": load_md,

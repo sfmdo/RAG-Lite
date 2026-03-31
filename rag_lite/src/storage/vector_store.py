@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Dict, Any
-from utils.logger import get_logger
+from rag_lite.utils.logger import get_logger
 logger = get_logger(__name__)
 
 GLOBAL_USER_ID = "global_public"

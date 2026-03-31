@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from src.storage.vector_store import DocumentStore, ContextStore, GLOBAL_USER_ID
+from rag_lite.src.storage.vector_store import DocumentStore, ContextStore, GLOBAL_USER_ID
 
 
 # --- FIXTURES ---

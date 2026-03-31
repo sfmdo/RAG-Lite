@@ -5,7 +5,7 @@ from pathlib import Path
 root_path = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_path))
 
-from src.ingestion.document_loader import serveDocument
+from rag_lite.src.ingestion.document_loader import serveDocument
 
 # Define paths relative to this script
 BASE_DIR = Path(__file__).resolve().parent

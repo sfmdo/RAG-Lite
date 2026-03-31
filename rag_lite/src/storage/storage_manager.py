@@ -1,7 +1,7 @@
-from src.storage.vector_store import DocumentStore , ContextStore, CodeStore
-from src.storage.chroma_manager import AsyncChromaManager
+from rag_lite.src.storage.vector_store import DocumentStore , ContextStore, CodeStore
+from rag_lite.src.storage.chroma_manager import AsyncChromaManager
 from typing import List, Dict, Any
-from utils.logger import get_logger
+from rag_lite.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

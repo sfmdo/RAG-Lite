@@ -1,5 +1,5 @@
 import pytest
-from src.storage.storage_manager import StorageManager
+from rag_lite.src.storage.storage_manager import StorageManager
 
 @pytest.fixture
 async def real_storage_system():

@@ -1,7 +1,7 @@
 import os
 import chromadb
 from dotenv import load_dotenv
-from src.storage.embedder import LocalEmbedder
+from rag_lite.src.storage.embedder import LocalEmbedder
 from chromadb.config import Settings
 
 load_dotenv()

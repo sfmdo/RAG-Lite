@@ -1,4 +1,4 @@
-from processing.chunking.text_splitter import TextSplitter
+from rag_lite.processing.chunking.text_splitter import TextSplitter
 from typing import Any, List
 from pathlib import Path
 from enum import Enum

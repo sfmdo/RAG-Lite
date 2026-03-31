@@ -1,4 +1,4 @@
-from src.storage.storage_manager import StorageManager
+from rag_lite.src.storage.storage_manager import StorageManager
 
 class Retriever:
     def __init__(self, storage_manager: StorageManager):

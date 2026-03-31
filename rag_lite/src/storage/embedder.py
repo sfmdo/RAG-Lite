@@ -1,5 +1,6 @@
-import os
-from typing import List, Sequence, cast, Dict, Any
+
+import os   
+from typing import Dict, Any
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from fastembed import TextEmbedding
 
@@ -10,8 +11,15 @@ class LocalEmbedder(EmbeddingFunction):
         Downloads the model to cache_dir on the first run, then loads it locally.
         """
         self.model_name = model_name
-        self.cache_dir = cache_dir
-        
+        if cache_dir is None:
+            current_file_path = os.path.abspath(__file__) 
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))))
+            self.cache_dir = os.path.join(project_root, "data", "models")
+        else:
+            self.cache_dir = cache_dir
+
+        os.makedirs(self.cache_dir, exist_ok=True)
+
         self.model = TextEmbedding(
             model_name=self.model_name,
             cache_dir=self.cache_dir

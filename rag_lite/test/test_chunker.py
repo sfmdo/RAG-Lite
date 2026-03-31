@@ -9,7 +9,7 @@ from pathlib import Path
 root_path = Path(__file__).resolve().parent.parent
 sys.path.append(str(root_path))
 
-from processing.chunking.chunker_controller import ChunkerController
+from rag_lite.processing.chunking.chunker_controller import ChunkerController
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 logging.getLogger("transformers").setLevel(logging.ERROR)

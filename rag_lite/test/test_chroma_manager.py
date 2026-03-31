@@ -1,6 +1,5 @@
 import pytest
-import asyncio
-from src.storage.chroma_manager import AsyncChromaManager
+from rag_lite.src.storage.chroma_manager import AsyncChromaManager
 
 # 1. Fixture to set up and tear down the manager
 @pytest.fixture

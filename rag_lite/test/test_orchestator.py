@@ -1,6 +1,6 @@
 import os
 import pytest
-from src.core.orchestrator import RAGOrchestrator 
+from rag_lite.src.core.orchestrator import RAGOrchestrator 
 
 @pytest.fixture
 async def orchestrator_system():

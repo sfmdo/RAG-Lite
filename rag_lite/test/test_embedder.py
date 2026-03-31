@@ -1,5 +1,5 @@
 import pytest
-from src.storage.embedder import LocalEmbedder
+from rag_lite.src.storage.embedder import LocalEmbedder
 import numpy as np
 
 @pytest.fixture(scope="module")

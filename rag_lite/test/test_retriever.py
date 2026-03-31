@@ -1,6 +1,6 @@
 import pytest
-from src.storage.storage_manager import StorageManager
-from src.retriever.retriever import Retriever
+from rag_lite.src.storage.storage_manager import StorageManager
+from rag_lite.src.retriever.retriever import Retriever
 
 @pytest.fixture
 async def rag_system():

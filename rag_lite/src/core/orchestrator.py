@@ -1,12 +1,12 @@
 import os
 from typing import Dict, Any
 
-from src.ingestion.document_loader import serveDocument, extractExtension
-from processing.chunking.chunker_controller import ChunkerController
-from src.storage.storage_manager import StorageManager
-from src.retriever.retriever import Retriever
+from rag_lite.src.ingestion.document_loader import serveDocument, extractExtension
+from rag_lite.processing.chunking.chunker_controller import ChunkerController
+from rag_lite.src.storage.storage_manager import StorageManager
+from rag_lite.src.retriever.retriever import Retriever
 
-from src.storage.vector_store import GLOBAL_USER_ID
+from rag_lite.src.storage.vector_store import GLOBAL_USER_ID
 
 class RAGOrchestrator:
     def __init__(self):
