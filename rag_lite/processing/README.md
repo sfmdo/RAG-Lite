@@ -79,3 +79,8 @@ md_chunks = controller.process(md_text, extension="md")
 # Uses CODE strategy (class, def, etc.)
 code_text = "def main():\n    print('Hello')"
 code_chunks = controller.process(code_text, extension="py")
+```
+
+---
+*The recursive chunking logic in this project is adapted from the [fixed_token_chunker](https://github.com/brandonstarxel/chunking_evaluation/blob/main/chunking_evaluation/chunking/fixed_token_chunker.py) by Brandon Starxel.*
+```
