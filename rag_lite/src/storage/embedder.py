@@ -6,7 +6,10 @@ from fastembed import TextEmbedding
 from pathlib import Path
 class LocalEmbedder(EmbeddingFunction):
     def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", cache_dir: str = None):
-        self.model_name = model_name
+        self.model_name = model_name or os.getenv(
+        "MODEL_NAME", 
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
         
         if cache_dir is None:
             self.cache_dir = None 

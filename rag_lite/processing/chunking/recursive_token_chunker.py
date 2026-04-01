@@ -15,20 +15,12 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
     """
 
     def __init__(
-        self,
-        tokenizer_name: str = "e5-small",
-        chunk_size: int = 200,
-        chunk_overlap: int = 50,
-        **kwargs: Any,
+    self,
+    tokenizer_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    chunk_size: int = 200,
+    chunk_overlap: int = 50,
+    **kwargs: Any,
     ) -> None:
-        """
-        Initialize the chunker using a local path for the tokenizer files.
-        
-        Args:
-            tokenizer_path: Path to the directory containing tokenizer.json, config.json, etc.
-            chunk_size: Maximum tokens per chunk.
-            chunk_overlap: Number of tokens to overlap between chunks.
-        """
         try:
             from transformers import AutoTokenizer
         except ImportError:
@@ -36,32 +28,28 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
                 "Could not import transformers python package. "
                 "Please install it with `uv add transformers`."
             )
-        
-        current_file = Path(__file__).resolve()
-        project_root = current_file.parent.parent.parent
-        
-        tokenizer_path = project_root / "resources" / "tokenizer" / tokenizer_name
-        
-        tokenizer_path_str = str(tokenizer_path.resolve())
 
-        if not tokenizer_path.exists():
-            raise ValueError(
-                f"Tokenizer folder '{tokenizer_name}' not found at: {tokenizer_path_str}. "
-                "Ensure the folder exists under 'resources/tokenizer/'."
-            )
-        
-        # Load tokenizer from local resources
         try:
             self._tokenizer = AutoTokenizer.from_pretrained(
-                tokenizer_path_str,
-                local_files_only=True,
+                tokenizer_name,
                 use_fast=True
             )
-        except Exception as e:
-            raise ValueError(
-                f"Could not load model : {tokenizer_name}. "
-                f"Error: {str(e)}"
-            )
+        except Exception:
+            current_file = Path(__file__).resolve()
+            project_root = current_file.parent.parent.parent
+            tokenizer_path = project_root / "resources" / "tokenizer" / tokenizer_name
+        
+            if tokenizer_path.exists():
+                self._tokenizer = AutoTokenizer.from_pretrained(
+                    str(tokenizer_path.resolve()),
+                    local_files_only=True,
+                    use_fast=True
+                )
+            else:
+                raise ValueError(
+                    f"Could not load tokenizer '{tokenizer_name}' from Hugging Face "
+                    f"nor found at local path: {tokenizer_path}"
+                )
 
         # Define the token counting function
         def _token_length(text: str) -> int:
