@@ -11,10 +11,12 @@ class LocalEmbedder(EmbeddingFunction):
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
         
-        if cache_dir is None:
-            self.cache_dir = None 
-        else:
+        if cache_dir:
             self.cache_dir = str(Path(cache_dir).resolve())
+        else:
+            self.cache_dir = str(Path(os.getcwd()) / "models_cache")
+            
+        os.makedirs(self.cache_dir, exist_ok=True)
 
         self.model = TextEmbedding(
             model_name=self.model_name,
