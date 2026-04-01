@@ -1,16 +1,14 @@
 # RAG-Lite
 
-A lightweight, fully local Retrieval-Augmented Generation (RAG) pipeline. RAG-Lite is designed to ingest various document formats, chunk them efficiently, generate multilingual embeddings, and orchestrate context retrieval for Large Language Models—all without relying on external APIs for data storage or embedding generation.
+A lightweight, fully local Retrieval-Augmented Generation (RAG) pipeline. **RAG-Lite** is designed to ingest various document formats, chunk them efficiently, generate multilingual embeddings, and orchestrate context retrieval for Large Language Models—all without relying on external cloud APIs for data storage or embedding generation.
 
 ## Key Features
 
-*   **100% Local Vector Storage:** Uses ChromaDB backed by local SQLite (`data/vector_db/`). No cloud database connection is required.
-*   **Local Multilingual Embeddings:** Powered by `paraphrase-multilingual-MiniLM-L12-v2` for high-quality, offline semantic search across multiple languages.
+*   **Local Vector Storage via HTTP:** Connects to a local ChromaDB server over HTTP. This provides a robust client-server architecture running safely on your local network.
+*   **Automatic Multilingual Embeddings:** Powered by `fastembed`. High-quality, offline semantic search across multiple languages where models and tokenizers are automatically managed and cached locally based on your `.env` configuration.
 *   **Data Isolation:** Built-in metadata filtering ensures strict separation of documents and conversational history by `user_id`.
 *   **Multi-Format Ingestion:** Natively parses PDF, DOCX, ODT, MD, and TXT files.
 *   **Unified Orchestration:** A centralized Facade class (`RAGOrchestrator`) manages the entire pipeline, from file ingestion to context formatting.
-
----
 
 ## Project Structure
 
@@ -18,12 +16,11 @@ The architecture is highly modular. Each core component resides in the `src/` di
 
 ```plaintext
 RAG-Lite/
-├── data/                       # Local storage (ChromaDB SQLite, cached models)
-├── resources/                  # Downloaded tokenizers and local NLP resources
+├── models_cache/               # Local storage for models and tokenizers managed by fastembed
 ├── src/                        
 │   ├── ingestion/              # Extractor routers for PDFs, Word, Markdown, etc.
 │   ├── processing/             # Text cleaning and Token-aware chunking logic
-│   ├── storage/                # ChromaDB manager, embedder setup, and vector operations
+│   ├── storage/                # ChromaDB HTTP client setup, embedder, and vector operations
 │   ├── retriever/              # Search logic combining document facts and chat history
 │   └── orchestrator/           # Main entry point combining all modules (Facade)
 ├── test/                       # Comprehensive Pytest integration and unit tests
@@ -31,44 +28,37 @@ RAG-Lite/
 └── uv.lock                     # uv package manager lockfile
 ```
 
----
-
 ## Installation and Setup
 
 This project utilizes `uv` for dependency management and environment isolation.
 
 ### 1. Clone the repository and install dependencies
+
 ```bash
 git clone <your-repo-url>
 cd RAG-Lite
 uv sync
 ```
 
-### 2. Download the Local Tokenizer
-Execute the following command to download the necessary tokenizer files into the resources directory:
-```bash
-uv run --with huggingface-hub python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', local_dir='./resources/tokenizer/paraphrase-multilingual-MiniLM-L12-v2', allow_patterns=['tokenizer*', 'vocab.txt', 'config.json'])"
-```
+### 2. Environment Configuration
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory to define the path to the downloaded tokenizer:
+Create a `.env` file in the root directory to define your database connection and embedding model. The embedding model and its tokenizer will be automatically downloaded by `fastembed` upon the first initialization.
+
 ```env
-# Database Connection
-CHROMA_HOST=localhost
+# RAG ENV VARIABLES
+CHROMA_HOST="localhost"
 CHROMA_PORT=8000
-
-# Model & Tokenizer Configuration
-# Path to the downloaded tokenizer files
-TOKENIZER_NAME=./resources/tokenizer/paraphrase-multilingual-MiniLM-L12-v2
-# HuggingFace model identifier for the embedder
-MODEL_NAME=intfloat/multilingual-e5-small
-
-# System Settings
-# Options: DEBUG, INFO, WARNING, ERROR
-RAG_LOG_LEVEL=DEBUG
+MODEL_NAME="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2" # FOR EMBEDDED (MANAGED BY fastembed)
+RAG_LOG_LEVEL="DEBUG"
 ```
 
----
+### 3. Start your local ChromaDB Server
+
+Ensure you have your ChromaDB HTTP service running locally before executing the orchestrator. You can start it using the Chroma CLI:
+
+```bash
+chroma run --host localhost --port 8000
+```
 
 ## Quick Start
 
@@ -101,25 +91,22 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
----
-
 ## Testing
 
 The project includes a comprehensive suite of unit and integration tests covering the complete pipeline, from file extraction to vector database isolation.
 
-To execute the test suite, run:
+To execute the test suite, ensure your ChromaDB server is running and run:
+
 ```bash
 uv run pytest -v
 ```
-
----
-
+```
 ## Module Documentation
 
 For detailed technical specifications, architecture patterns, and internal workflows, refer to the documentation provided within each module:
 
-*   [Ingestion Module](./src/ingestion/README.md)
-*   [Processing and Chunking Module](./processing/README.md)
-*   [Storage Module](./src/storage/README.md)
-*   [Retriever Module](./src/retriever/README.md)
-*   [Orchestrator Module](./src/core/README.md)
+*   [Ingestion Module](rag_lite/src/ingestion/README.md)
+*   [Processing and Chunking Module](rag_lite/processing/README.md)
+*   [Storage Module](rag_lite/src/storage/README.md)
+*   [Retriever Module](rag_lite/src/retriever/README.md)
+*   [Orchestrator Module](rag_lite/src/core/README.md)

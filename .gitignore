@@ -25,3 +25,4 @@ rag_lite/data/vector_db/*
 rag_lite/data/models/*
 data/*
 rag_lite/test/data/*
+models_cache/*

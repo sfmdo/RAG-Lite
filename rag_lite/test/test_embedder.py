@@ -5,10 +5,7 @@ import numpy as np
 @pytest.fixture(scope="module")
 
 def embedder():
-    return LocalEmbedder(
-        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", 
-        cache_dir="./data/models"
-    )
+    return LocalEmbedder()
 
 # --- TESTS ---
 

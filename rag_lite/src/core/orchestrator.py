@@ -14,10 +14,12 @@ class RAGOrchestrator:
         self.retriever = Retriever(self.storage)
         self._is_initialized = False
 
-        tokenizer = os.getenv("TOKENIZER_NAME")
+        tokenizer = os.getenv("MODEL_NAME")
         if tokenizer is None:
-            raise ValueError("ERROR: La variable de entorno 'TOKENIZER_NAME' no está definida. "
-                    "Asegúrate de configurar tu archivo .env con la ruta al modelo.") 
+            raise ValueError(
+                    "ERROR: The environment variable 'MODEL_NAME' is not defined. "
+                    "Make sure to configure your .env file with the model path."
+                )
         self.chunker = ChunkerController(tokenizer_name=tokenizer)
 
     async def _ensure_initialized(self):

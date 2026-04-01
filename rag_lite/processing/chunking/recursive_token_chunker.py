@@ -13,14 +13,23 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
     Implementation of a TextSplitter that uses a local HuggingFace tokenizer.
     Ideal for models like e5-small running in local environments.
     """
-
+        
     def __init__(
-    self,
-    tokenizer_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-    chunk_size: int = 200,
-    chunk_overlap: int = 50,
-    **kwargs: Any,
+        self,
+        tokenizer_name: str = None, 
+        chunk_size: int = 200,
+        chunk_overlap: int = 50,
+        **kwargs: Any,
     ) -> None:
+        import os
+        from pathlib import Path
+        from rag_lite.config import MODELS_CACHE_DIR
+
+        self.tokenizer_name = tokenizer_name or os.getenv(
+            "MODEL_NAME", 
+            "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
+
         try:
             from transformers import AutoTokenizer
         except ImportError:
@@ -29,29 +38,38 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
                 "Please install it with `uv add transformers`."
             )
 
+
+        model_basename = self.tokenizer_name.split("/")[-1].lower()
+        tokenizer_path = None
+
+        if MODELS_CACHE_DIR.exists():
+            for root, dirs, files in os.walk(MODELS_CACHE_DIR):
+                if "tokenizer.json" in files or "vocab.txt" in files:
+                    if model_basename in root.lower():
+                        tokenizer_path = Path(root)
+                        break
+    
+
+        if not tokenizer_path:
+            raise ValueError(
+                f"The tokenizer for '{self.tokenizer_name}' has not been downloaded yet. "
+                f"Please initialize 'LocalEmbedder' first so that fastembed "
+                f"can download the files locally to: {MODELS_CACHE_DIR}"
+            )
+
         try:
             self._tokenizer = AutoTokenizer.from_pretrained(
-                tokenizer_name,
-                use_fast=True
+            str(tokenizer_path.resolve()),
+            local_files_only=True,
+            use_fast=True
+        )
+        except Exception as e:
+            raise ValueError(
+                    f"The tokenizer folder was found at {tokenizer_path}, "
+                    f"but an error occurred while loading it locally: {e}"
             )
-        except Exception:
-            current_file = Path(__file__).resolve()
-            project_root = current_file.parent.parent.parent
-            tokenizer_path = project_root / "resources" / "tokenizer" / tokenizer_name
-        
-            if tokenizer_path.exists():
-                self._tokenizer = AutoTokenizer.from_pretrained(
-                    str(tokenizer_path.resolve()),
-                    local_files_only=True,
-                    use_fast=True
-                )
-            else:
-                raise ValueError(
-                    f"Could not load tokenizer '{tokenizer_name}' from Hugging Face "
-                    f"nor found at local path: {tokenizer_path}"
-                )
 
-        # Define the token counting function
+
         def _token_length(text: str) -> int:
             return len(self._tokenizer.encode(text, add_special_tokens=False))
 
