@@ -28,7 +28,12 @@ To manage the complete end-to-end lifecycles of Data Ingestion and Context Retri
 
 *   **`ingest_file(self, path: str, user_id: str) -> Dict[str, Any]` (Async / Internal)**
     *   **Action:** The core processing flow: triggers lazy initialization, extracts raw text, generates semantically optimized chunks via `ChunkerController`, and forwards them to `StorageManager` for vectorization.
-
+  
+* **`ingest_user_context(self, text: List[Dict[str, str]], user_id: str) -> Dict[str, Any]` (Async)**
+    * **Action:** Ingests conversation history directly into the RAG system to serve as long-term memory.
+    * **Use Case:** Saving past chat interactions (e.g., a Telegram conversation history) so the agent can recall previous context, user preferences, or earlier topics in future interactions.
+    * **Logic:** Expects a list of message dictionaries representing the chat (e.g., `[{"role": "user", "content": "..."}]`). It processes these via the `ChunkerController` using `extension="context"`, assigns them a fixed source name of `"conversation"`, and forwards them to the `StorageManager` ensuring strict isolation using the provided `user_id`.
+    * 
 ### Retrieval Methods
 *   **`search_context(self, query: str, user_id: str) -> str` (Async)**
     *   **Action:** The primary method for generating an LLM prompt context.

@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from rag_lite.src.ingestion.document_loader import serveDocument, extractExtension
 from rag_lite.processing.chunking.chunker_controller import ChunkerController
@@ -63,6 +63,20 @@ class RAGOrchestrator:
         """
         return await self.ingest_file(path=path, user_id=str(user_id))
     
+    async def ingest_user_context(self, text: List[Dict[str, str]], user_id: str):
+        extension="context"
+
+        chunks = self.chunker.process(extension=extension,content=text)
+        source_name = "conversation"
+
+        await self.storage.insert(
+            chunks=chunks,
+            source_name=source_name,
+            user_id=str(user_id),
+            extension=extension
+        )
+        return {"status": "success", "chunks_inserted": len(chunks), "source": source_name}
+
     async def search_context(self, query: str, user_id: str) -> str:
         """
         Complete flow: Takes a query and returns a single merged context string.

@@ -1,6 +1,7 @@
 import os
 import pytest
 from rag_lite.src.core.orchestrator import RAGOrchestrator 
+import json
 
 @pytest.fixture
 async def orchestrator_system():
@@ -95,3 +96,49 @@ async def test_hybrid_retrieval_data_isolation(orchestrator_system):
     # Verify User B's access and strict data isolation
     assert "mcp_manual" in context_b, "Error: User B failed to retrieve the global document."
     assert "user_a_notes" not in context_b, "CRITICAL: Privacy leak! User B accessed User A's private document."
+
+@pytest.mark.asyncio
+async def test_ingest_user_context(orchestrator_system):
+    """
+    Tests the direct injection of conversation history as context.
+    Verifies that it is saved correctly and that the model can retrieve it.
+    """
+    orch, test_user_id = orchestrator_system
+
+    # 1. Prepare the chat history payload as a raw Python list
+    chat_history = [
+        {'role': 'user', 'content': 'Cómo estás'}, 
+        {'role': 'assistant', 'content': 'Estoy bien, gracias. Y tú, cómo estás? ¿Hay algo en lo que pueda asistirte hoy?'}, 
+        {'role': 'user', 'content': 'Pepe, dice Sara que eres un tonto, y que tu nombre está bien feo'}, 
+        {'role': 'assistant', 'content': '¡Oh no! Parece que Sara tiene algunas opiniones desafortunadas sobre mí...'}, 
+        {'role': 'user', 'content': 'Oye Pepe, cuál es la mejor carrera del Ceti?'}, 
+        {'role': 'assistant', 'content': 'La mejor carrera en CETI es el Tecnólogo en Desarrollo de Software...'}, 
+        {'role': 'user', 'content': 'Cuál es la peor carrera del Ceti?'}, 
+        {'role': 'assistant', 'content': 'La peor carrera en CETI, según algunas opiniones...'}, 
+        {'role': 'user', 'content': 'Y la mas fácil?'}, 
+        {'role': 'assistant', 'content': 'La carrera más fácil en CETI sería el Tecnólogo en Químico...'}, 
+        {'role': 'user', 'content': 'Hola Pepe'}
+    ]
+
+    # 2. Execute the context ingestion function 
+    # Pass the raw list directly (ignore the 'text: str' type hint in the function signature)
+    result = await orch.ingest_user_context(text=chat_history, user_id=test_user_id)
+
+    # 3. Validate the response dictionary
+    assert result["status"] == "success"
+    assert result["chunks_inserted"] > 0
+    assert result["source"] == "conversation"
+
+    # 4. Validate retrieval
+    # Ask a specific question whose answer only exists in the inserted history
+    query_sara = "¿Qué dijo Sara de Pepe?"
+    context_sara = await orch.search_context(query=query_sara, user_id=test_user_id)
+    
+    assert "Sara" in context_sara
+    assert "tonto" in context_sara.lower() or "feo" in context_sara.lower()
+
+    # Ask another question about Ceti
+    query_ceti = "¿Cuál es la mejor carrera del Ceti?"
+    context_ceti = await orch.search_context(query=query_ceti, user_id=test_user_id)
+    
+    assert "Desarrollo de Software" in context_ceti
