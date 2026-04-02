@@ -33,6 +33,7 @@ To manage the complete end-to-end lifecycles of Data Ingestion and Context Retri
     * **Action:** Ingests conversation history directly into the RAG system to serve as long-term memory.
     * **Use Case:** Saving past chat interactions (e.g., a Telegram conversation history) so the agent can recall previous context, user preferences, or earlier topics in future interactions.
     * **Logic:** Expects a list of message dictionaries representing the chat (e.g., `[{"role": "user", "content": "..."}]`). It processes these via the `ChunkerController` using `extension="context"`, assigns them a fixed source name of `"conversation"`, and forwards them to the `StorageManager` ensuring strict isolation using the provided `user_id`.
+    * **Source**: The source is the "Conversation, Date: now datetime
     * 
 ### Retrieval Methods
 *   **`search_context(self, query: str, user_id: str) -> str` (Async)**
