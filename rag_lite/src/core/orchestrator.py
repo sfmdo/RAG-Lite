@@ -1,6 +1,6 @@
 import os
 from typing import Dict, Any, List
-
+import datetime
 from rag_lite.src.ingestion.document_loader import serveDocument, extractExtension
 from rag_lite.processing.chunking.chunker_controller import ChunkerController
 from rag_lite.src.storage.storage_manager import StorageManager
@@ -66,8 +66,8 @@ class RAGOrchestrator:
     async def ingest_user_context(self, text: List[Dict[str, str]], user_id: str):
         extension="context"
 
-        chunks = self.chunker.process(extension=extension,content=text)
-        source_name = "conversation"
+        chunks = self.chunker.process(extension=extension,content=text) 
+        source_name =f"Conversation, Date:{datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
 
         await self.storage.insert(
             chunks=chunks,
