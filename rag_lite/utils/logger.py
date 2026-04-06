@@ -23,7 +23,7 @@ def get_logger(name: str) -> logging.Logger:
         )
         
         # Console Handler (Outputs to terminal)
-        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler = logging.StreamHandler(sys.stderr)
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
         
