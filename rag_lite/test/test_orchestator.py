@@ -127,7 +127,7 @@ async def test_ingest_user_context(orchestrator_system):
     # 3. Validate the response dictionary
     assert result["status"] == "success"
     assert result["chunks_inserted"] > 0
-    assert result["source"] == "conversation"
+    assert result["source"].startswith("Conversation")
 
     # 4. Validate retrieval
     # Ask a specific question whose answer only exists in the inserted history
@@ -142,3 +142,89 @@ async def test_ingest_user_context(orchestrator_system):
     context_ceti = await orch.search_context(query=query_ceti, user_id=test_user_id)
     
     assert "Desarrollo de Software" in context_ceti
+
+# --- DELETION TESTS ---
+
+@pytest.mark.asyncio
+async def test_delete_global_document_flow(orchestrator_system):
+    """
+    Test: Ingest a global manual, verify search works, 
+    delete it, and verify it is gone for everyone.
+    """
+    orch, test_user_id = orchestrator_system
+    current_dir = os.path.dirname(__file__)
+    global_file = os.path.join(current_dir, "inputs", "mcp_manual.txt")
+
+    # 1. Ingest global
+    await orch.ingest_global_document(path=global_file)
+
+    # 2. Verify search finds it
+    context_before = await orch.search_context(query="mcp tools", user_id=test_user_id)
+    assert "mcp_manual" in context_before
+
+    # 3. Delete global
+    del_result = await orch.delete_global_document(path=global_file)
+    assert del_result["status"] == "success"
+    assert del_result["scope"] == "global"
+
+    # 4. Verify search NO LONGER finds it
+    context_after = await orch.search_context(query="mcp tools", user_id=test_user_id)
+    assert "mcp_manual" not in context_after
+
+
+@pytest.mark.asyncio
+async def test_delete_user_document_flow(orchestrator_system):
+    """
+    Test: Ingest a private file for User A, verify search, 
+    delete it, and ensure it doesn't affect other data.
+    """
+    orch, _ = orchestrator_system
+    user_a_id = "user_A"
+    current_dir = os.path.dirname(__file__)
+    private_file = os.path.join(current_dir, "inputs", "user_a_notes.txt")
+
+    # 1. Ingest private
+    await orch.ingest_user_document(path=private_file, user_id=user_a_id)
+
+    # 2. Verify search finds it for User A
+    context_before = await orch.search_context(query="notes", user_id=user_a_id)
+    assert "user_a_notes" in context_before
+
+    # 3. Delete private
+    del_result = await orch.delete_user_document(path=private_file, user_id=user_a_id)
+    assert del_result["status"] == "success"
+    assert del_result["user_id"] == user_a_id
+
+    # 4. Verify search is empty for User A
+    context_after = await orch.search_context(query="notes", user_id=user_a_id)
+    assert "user_a_notes" not in context_after
+
+
+@pytest.mark.asyncio
+async def test_clear_user_chat_history_flow(orchestrator_system):
+    """
+    Test: Ingest conversation history, verify recall, 
+    wipe history, and verify memory is gone.
+    """
+    orch, test_user_id = orchestrator_system
+    
+    chat_history = [
+        {'role': 'user', 'content': 'Mi color favorito es el verde esmeralda'},
+        {'role': 'assistant', 'content': 'Entendido, lo recordaré.'}
+    ]
+
+    # 1. Ingest history
+    await orch.ingest_user_context(text=chat_history, user_id=test_user_id)
+
+    # 2. Verify recall works
+    context_before = await orch.search_context(query="¿Cuál es mi color favorito?", user_id=test_user_id)
+    assert "esmeralda" in context_before.lower()
+
+    # 3. Wipe chat history
+    wipe_result = await orch.clear_user_chat_history(user_id=test_user_id)
+    assert wipe_result["status"] == "success"
+    assert wipe_result["action"] == "context_wipe"
+
+    # 4. Verify recall fails (memory wiped)
+    context_after = await orch.search_context(query="¿Cuál es mi color favorito?", user_id=test_user_id)
+    assert "esmeralda" not in context_after.lower()

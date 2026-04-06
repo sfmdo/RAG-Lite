@@ -96,6 +96,37 @@ async def test_document_store_search(mock_manager):
     assert results[0]["metadata"]["source"] == "test.pdf"
     assert results[0]["metadata"]["user_id"] == "12345"
 
+@pytest.mark.asyncio
+async def test_document_store_delete_by_source(mock_manager):
+    doc_store = DocumentStore(mock_manager)
+    user_id = "12345"
+    source = "manual_pos.md"
+    
+    await doc_store.delete_by_source(user_id=user_id, source_name=source)
+    
+    mock_collection = mock_manager.get_collection("documents")
+    mock_collection.delete.assert_called_once()
+    
+    # Verificamos que el filtro 'where' sea exacto para no borrar archivos de otros usuarios
+    kwargs = mock_collection.delete.call_args.kwargs
+    expected_where = {
+        "$and": [
+            {"user_id": user_id},
+            {"source": source}
+        ]
+    }
+    assert kwargs['where'] == expected_where
+
+@pytest.mark.asyncio
+async def test_document_store_delete_all_user_docs(mock_manager):
+    doc_store = DocumentStore(mock_manager)
+    user_id = "12345"
+    
+    await doc_store.delete_all_user_docs(user_id=user_id)
+    
+    mock_collection = mock_manager.get_collection("documents")
+    # Verificamos que el filtro solo pida el user_id
+    mock_collection.delete.assert_called_once_with(where={"user_id": user_id})
 
 # --- CONTEXT STORE TESTS ---
 import pytest
@@ -139,3 +170,14 @@ async def test_context_store_get_relevant_history(mock_manager):
     
     # CRITICAL TEST: Ensure the where clause is filtering history by the Telegram ID!
     assert kwargs['where'] == {"user_id": "telegram_user_123"}
+
+@pytest.mark.asyncio
+async def test_context_store_delete_history(mock_manager):
+    context_store = ContextStore(mock_manager)
+    user_id = "6596706525"
+    
+    await context_store.delete_history(user_id=user_id)
+    
+    mock_collection = mock_manager.get_collection("context")
+    # Verificamos que se convierta el ID a string si es necesario y se use el filtro correcto
+    mock_collection.delete.assert_called_once_with(where={"user_id": str(user_id)})
