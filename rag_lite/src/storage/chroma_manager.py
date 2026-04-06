@@ -29,8 +29,6 @@ class AsyncChromaManager:
                 embedding_function=self.embedder 
             )
             
-        print(f"ChromaManager initialized at {self.host}:{self.port}")
-        print(f"Ready collections: {list(self.collections.keys())}")
 
     def get_collection(self, name: str):
         """Returns the requested collection instance."""
