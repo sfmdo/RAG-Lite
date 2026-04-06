@@ -17,8 +17,8 @@ class HuggingFaceTokenRecursiveChunker(TextSplitter):
     def __init__(
         self,
         tokenizer_name: str = None, 
-        chunk_size: int = 200,
-        chunk_overlap: int = 50,
+        chunk_size: int = 350,
+        chunk_overlap: int = 30,
         **kwargs: Any,
     ) -> None:
         import os

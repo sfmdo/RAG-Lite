@@ -46,8 +46,8 @@ Centralizes the splitting rules based on content type:
 
 ### B. Recursive Engine (`recursive_token_chunker.py`)
 A sophisticated engine that receives text and a list of separators. It calculates lengths using the local tokenizer and applies a **Recursive Window** approach:
-*   **Chunk Size:** Default 200 Tokens.
-*   **Chunk Overlap:** Default 50 Tokens.
+*   **Chunk Size:** Default 350 Tokens.
+*   **Chunk Overlap:** Default 30 Tokens.
 
 ### C. Orchestrator (`chunker_controller.py`)
 The main entry point. It receives data and an extension, resolves the correct strategy, cleans the text, and executes the recursive engine.
