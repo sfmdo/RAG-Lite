@@ -33,7 +33,7 @@ To manage the complete end-to-end lifecycles of Data Ingestion and Context Retri
     * **Action:** Ingests conversation history directly into the RAG system to serve as long-term memory.
     * **Use Case:** Saving past chat interactions (e.g., a Telegram conversation history) so the agent can recall previous context, user preferences, or earlier topics in future interactions.
     * **Logic:** Expects a list of message dictionaries representing the chat (e.g., `[{"role": "user", "content": "..."}]`). It processes these via the `ChunkerController` using `extension="context"`, assigns them a fixed source name of `"conversation"`, and forwards them to the `StorageManager` ensuring strict isolation using the provided `user_id`.
-    * **Source**: The source is the "Conversation, Date: now datetime
+    * **Source**: Now automatically generates a dynamic `source_name` using the format: `"Conversation, Date: YYYY/MM/DD HH:MM:SS"`. This ensures temporal traceability for each long-term memory block inserted into the database.
     * 
 ### Retrieval Methods
 *   **`search_context(self, query: str, user_id: str) -> str` (Async)**
@@ -43,6 +43,21 @@ To manage the complete end-to-end lifecycles of Data Ingestion and Context Retri
         2.  **Memory Retrieval:** Searches the conversation history associated strictly with the `user_id`.
     *   **Security:** While knowledge retrieval is hybrid, chat history remains strictly isolated to the individual user to prevent privacy leaks.
     *   **Returns:** A cohesive, Markdown-formatted string containing relevant document facts and past chat memory.
+### Deletion Methods
+
+*   **`delete_global_document(self, path: str) -> Dict[str, Any]` (Async)**
+    *   **Action:** Removes a global manual or shared system documentation.
+    *   **Logic:** Identifies the file by its `basename` and cleans all associated chunks stored under the `GLOBAL_USER_ID`.
+    *   **Use Case:** Replacing outdated MCP tool guides or updating global system behavior rules.
+
+*   **`delete_user_document(self, path: str, user_id: str) -> Dict[str, Any]` (Async)**
+    *   **Action:** Removes a private document uploaded by a specific user.
+    *   **Logic:** Uses the filename and the `user_id` to guarantee that only that specific user's version is deleted, maintaining the integrity of other users' data.
+
+*   **`clear_user_chat_history(self, user_id: str) -> Dict[str, Any]` (Async)**
+    *   **Action:** Completely wipes the conversational memory (context) for a specific user.
+    *   **Logic:** Triggers a bulk delete command in the "context" collection, filtered strictly by the provided `user_id`.
+    *   **Use Case:** Essential for implementing `/reset` or `/start` commands in chat interfaces to ensure a private and clean session.
 
 ---
 
@@ -50,6 +65,8 @@ To manage the complete end-to-end lifecycles of Data Ingestion and Context Retri
 
 ### `_ensure_initialized(self)` (Async / Internal)
 Implements the **Lazy Initialization** pattern. It verifies the database connection is active before any operation. This ensures heavy resource allocation (like loading embedding models into memory) only occurs upon the first actual request.
+
+*   **Safe Deletion Pattern:** Deletion methods now strictly enforce the **Lazy Initialization** pattern (`_ensure_initialized`). This ensures that the connection to ChromaDB is fully established and authenticated before any data cleanup or removal operation is attempted.
 
 ### Hybrid Metadata Filtering
 The Orchestrator instructs the underlying Retriever to use a logical `$or` filter during the vector search:

@@ -58,7 +58,11 @@ The Storage module is the central memory engine of the RAG-Lite system. It is re
     *   *ID Logic:* Generates random UUIDs for each chunk to prevent overwriting, unless a list of `custom_ids` is explicitly provided.
 *   **`search(self, query: str, top_k: int = 3) -> List[Dict]`**
     *   *Action:* Embeds the query and performs a similarity search across all ingested documents, returning the top `k` most relevant chunks formatted as a clean dictionary list.
-
+*   **`delete_by_source(self, user_id: str, source_name: str)`**
+    *   *Action:* Removes specific chunks belonging to a single file (source) for a specific user.
+    *   *Logic:* Uses an `$and` operator to ensure only the requested file is deleted, preventing cross-user data loss.
+*   **`delete_all_user_docs(self, user_id: str)`**
+    *   *Action:* Wipes every document chunk associated with a `user_id`. Use with caution.
 ---
 
 ## 4. Context Store (`src/storage/vector_store.py`)
@@ -76,7 +80,9 @@ The Storage module is the central memory engine of the RAG-Lite system. It is re
 *   **`get_relevant_history(self, session_id: str, current_query: str, top_k: int = 5) -> List[Dict]`**
     *   *Action:* Performs a similarity search for past messages that are relevant to the user's current question.
     *   *Security/Filtering:* Uses a ChromaDB `where` clause (`{"user_id": user_id}`) to guarantee that the LLM only retrieves memories belonging to the specific user making the request.
-
+*   **`delete_history(self, user_id: str)`**
+    *   *Action:* Completely clears the conversation history for a specific user.
+    *   *Use Case:* Essential for "Reset Chat" or "/start" commands in messaging bots to ensure a clean slate.
 ---
 
 ## 5. Storage Manager (`src/storage/storage_manager.py`)
@@ -95,7 +101,11 @@ The Storage module is the central memory engine of the RAG-Lite system. It is re
 *   **`retrieve(self, query: str, user_id: str, storage_type: str, top_k: int = 1)` (Async)**
     *   *Action:* Searches the collection specified by `storage_type` for the chunks most similar to the query.
     *   *Security:* Applies a strict filter by `user_id` to ensure the user only retrieves their own information or history.
-
+*   **`delete(self, user_id: str, source_name: str = None, storage_type: str = "document")` (Async)**
+    *   *Action:* Directs the deletion request to the correct collection.
+    *   *Logic:* 
+        *   If `storage_type="context"`, it only requires the `user_id`.
+        *   If `storage_type="document"`, it uses both `user_id` and `source_name` for precise file removal.
 ---
 
 ## Dependencies & Environment Variables

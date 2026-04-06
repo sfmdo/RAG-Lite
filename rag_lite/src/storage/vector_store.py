@@ -58,6 +58,21 @@ class DocumentStore:
                 })
         return formatted
 
+    async def delete_by_source(self, user_id: str, source_name: str) -> None:
+        """Deletes chunks from a specific source for a specific user."""
+        await self.collection.delete(
+            where={"$and": [
+                {"user_id": user_id},
+                {"source": source_name}
+            ]}
+        )
+        logger.debug(f"Deleted documents from source '{source_name}' for user {user_id}")
+
+    async def delete_all_user_docs(self, user_id: str) -> None:
+        """Deletes ALL documents belonging to a specific user."""
+        await self.collection.delete(where={"user_id": user_id})
+        logger.debug(f"Deleted all documents for user {user_id}")
+
 
 class ContextStore:
     def __init__(self, manager):
@@ -102,6 +117,12 @@ class ContextStore:
                 })
         return formatted
 
+    async def delete_history(self, user_id: str) -> None:
+        """Clears all conversation history for a specific user."""
+        await self.collection.delete(
+            where={"user_id": str(user_id)}
+        )
+        logger.debug(f"Deleted chat history for User_Id: {user_id}")
 
 class CodeStore:
     def __init__(self, manager):
@@ -120,4 +141,9 @@ class CodeStore:
     async def search(self, *args, **kwargs) -> None:
         """Not implemented yet."""
         logger.debug("CodeStore.search is not implemented yet.")
+        return None
+
+    async def delete_code(self, user_id: str) -> None:
+        """Placeholder for deleting code snippets."""
+        logger.debug("CodeStore.delete_code is not implemented yet.")
         return None

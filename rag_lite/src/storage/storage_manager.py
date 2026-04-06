@@ -44,6 +44,12 @@ class StorageManager:
             "code": self.codestore.search
         }
 
+        self.delete_actions = {
+            "document": self.docstore.delete_by_source,
+            "context": self.contextstore.delete_history,
+            "code": self.codestore.delete_code
+        }
+
         logger.debug("StorageManager is fully initialized and ready!")
 
     async def insert(self, chunks: List[str], user_id: str,source_name: str, extension: str = "txt"):
@@ -73,3 +79,21 @@ class StorageManager:
         
         results = await search_func(query=query,user_id=user_id,top_k=top_k)
         return results
+
+    async def delete(self, user_id: str, source_name: str = None, storage_type: str = "document"):
+        """
+        Main deletion entry point. 
+        Routes the delete request to the specific store.
+        """
+        action = self.delete_actions.get(storage_type.lower())
+
+        if not action:
+            logger.error(f"No delete action defined for storage type: {storage_type}")
+            raise ValueError(f"No delete action defined for storage type: {storage_type}")
+
+        logger.debug(f"Deleting from {storage_type} for User {user_id} (Source: {source_name})...")
+        
+        if storage_type == "context":
+            return await action(user_id=user_id)
+        else:
+            return await action(user_id=user_id, source_name=source_name)

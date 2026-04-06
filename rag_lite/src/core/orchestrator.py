@@ -89,3 +89,44 @@ class RAGOrchestrator:
         )
         
         return merged_context
+
+    async def delete_global_document(self, path: str) -> Dict[str, Any]:
+        """
+        Removes a global manual or shared documentation from the Vector DB.
+        """
+        await self._ensure_initialized()
+        source_name = os.path.basename(path)
+        
+        await self.storage.delete(
+            user_id=GLOBAL_USER_ID, 
+            source_name=source_name, 
+            storage_type="document"
+        )
+        return {"status": "success", "deleted_source": source_name, "scope": "global"}
+
+    async def delete_user_document(self, path: str, user_id: str) -> Dict[str, Any]:
+        """
+        Removes a private document belonging to a specific user.
+        """
+        await self._ensure_initialized()
+        source_name = os.path.basename(path)
+        
+        await self.storage.delete(
+            user_id=str(user_id), 
+            source_name=source_name, 
+            storage_type="document"
+        )
+        return {"status": "success", "deleted_source": source_name, "user_id": user_id}
+
+    async def clear_user_chat_history(self, user_id: str) -> Dict[str, Any]:
+        """
+        Wipes the entire conversation memory (context) for a specific user.
+        Useful for a "Reset Chat" command.
+        """
+        await self._ensure_initialized()
+        
+        await self.storage.delete(
+            user_id=str(user_id), 
+            storage_type="context"
+        )
+        return {"status": "success", "action": "context_wipe", "user_id": user_id}
